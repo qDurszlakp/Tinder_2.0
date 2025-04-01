@@ -1,0 +1,23 @@
+{
+  "name": "tinder-clone-api",
+  "version": "1.0.0",
+  "description": "Prosty backend aplikacji randkowej typu Tinder z użyciem Node.js, Express i MongoDB",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "tinder",
+    "api",
+    "dating",
+    "express",
+    "mongodb"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.19.2",
+    "mongodb": "^6.8.0"
+  }
+} 
