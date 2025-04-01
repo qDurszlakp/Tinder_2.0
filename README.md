@@ -8,11 +8,27 @@ Ten projekt implementuje prosty backend aplikacji randkowej typu Tinder w Node.j
 - Wykrywanie dopasowań (match), gdy dwoje użytkowników wzajemnie wyrazi zainteresowanie
 - Przeglądanie historii dopasowań
 
+## Struktura projektu
+
+```
+.
+├── server.js          # Główny plik serwera (punkt wejściowy)
+├── package.json       # Zależności projektu
+├── .gitignore         # Ignorowane pliki i katalogi
+└── src/               # Katalog z kodem źródłowym
+    ├── config/        # Konfiguracja (bazy danych itp.)
+    ├── controllers/   # Kontrolery obsługujące żądania 
+    ├── models/        # Modele danych
+    ├── routes/        # Definicje endpointów API
+    ├── middlewares/   # Funkcje middleware
+    └── utils/         # Funkcje pomocnicze
+```
+
 ## Wymagania
 
 - Node.js (wersja 14 lub nowsza)
 - npm (zazwyczaj instalowany razem z Node.js)
-- Uruchomiona instancja MongoDB (lokalnie na `mongodb://localhost:27017` lub skonfigurowana inaczej w `server.js`)
+- Uruchomiona instancja MongoDB (lokalnie na `mongodb://localhost:27017` lub skonfigurowana inaczej w `src/config/database.js`)
 
 ## Instalacja
 
@@ -33,7 +49,7 @@ Aby uruchomić serwer, wykonaj polecenie:
 npm start
 ```
 
-Serwer połączy się z bazą danych MongoDB i będzie nasłuchiwał na porcie 3000 (lub innym, jeśli zostanie skonfigurowany inaczej w `server.js`).
+Serwer połączy się z bazą danych MongoDB i będzie nasłuchiwał na porcie 3000.
 
 ## Endpoints API
 
