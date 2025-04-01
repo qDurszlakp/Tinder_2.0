@@ -43,8 +43,10 @@ async function startServer() {
     await connectDB();
     
     // Uruchom serwer Express
-    const server = app.listen(PORT, () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`Serwer Tinder-Clone nasłuchuje na porcie ${PORT}`);
+      console.log(`PORT: ${PORT}`);
+      console.log(`URL: http://localhost:${PORT}`);
     });
 
     // Socket.IO dla czatu w czasie rzeczywistym

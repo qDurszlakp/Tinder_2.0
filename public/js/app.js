@@ -7,8 +7,8 @@ let authToken = null;
 let socket = null;
 let currentChatProfileId = null;
 
-// API URL - backend działa na porcie 3000
-const API_URL = 'http://localhost:3000';
+// API URL - automatycznie wykrywany na podstawie aktualnego hosta
+const API_URL = window.location.origin;
 
 // Elementy DOM - ekrany
 const authScreen = document.getElementById('auth-screen');
