@@ -1,3 +1,10 @@
+// Ładowanie zmiennych środowiskowych
+try {
+  require('dotenv').config();
+} catch (e) {
+  console.log('Ostrzeżenie: moduł dotenv nie jest zainstalowany, używamy domyślnych wartości');
+}
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');

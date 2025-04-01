@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 // Sekret do podpisywania tokenów JWT (ten sam co w authController)
-const JWT_SECRET = 'tinder-clone-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'tinder-clone-secret-key';
 
 // Middleware do weryfikacji tokenu JWT
 const requireAuth = async (req, res, next) => {

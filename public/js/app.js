@@ -130,7 +130,10 @@ function initializeSocket() {
     }
     
     // Nawiązywanie połączenia z serwerem Socket.IO
-    socket = io(API_URL);
+    // Automatycznie obsługuje połączenia HTTP i HTTPS
+    socket = io(API_URL, {
+        secure: window.location.protocol === 'https:'
+    });
     
     // Nasłuchiwanie zdarzeń
     socket.on('connect', () => {

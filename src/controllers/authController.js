@@ -2,7 +2,7 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
 // Sekret do podpisywania tokenów JWT
-const JWT_SECRET = 'tinder-clone-secret-key';  // W produkcji powinien być w zmiennych środowiskowych
+const JWT_SECRET = process.env.JWT_SECRET || 'tinder-clone-secret-key';  // W produkcji powinien być w zmiennych środowiskowych
 
 // Rejestracja użytkownika
 async function register(req, res) {

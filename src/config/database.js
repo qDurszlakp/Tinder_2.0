@@ -1,8 +1,8 @@
 const { MongoClient } = require('mongodb');
 
-// Konfiguracja MongoDB
-const mongoUrl = 'mongodb://localhost:27017';
-const dbName = 'tinderCloneDb';
+// Konfiguracja MongoDB - używamy zmiennych środowiskowych
+const mongoUrl = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+const dbName = process.env.MONGODB_DB || 'tinderCloneDb';
 let db;
 
 // Asynchroniczna funkcja do połączenia z MongoDB
