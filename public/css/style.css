@@ -1,0 +1,281 @@
+/* Globalne resetowanie stylów */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: #f5f7fa;
+    color: #333;
+    line-height: 1.6;
+}
+
+.app-container {
+    max-width: 500px;
+    margin: 0 auto;
+    background-color: #fff;
+    min-height: 100vh;
+    position: relative;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Nagłówek */
+header {
+    padding: 15px;
+    background: linear-gradient(to right, #fd267a, #ff7854);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+header h1 {
+    margin-bottom: 15px;
+    font-size: 24px;
+}
+
+nav {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 5px;
+}
+
+.nav-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 20px;
+    padding: 10px 15px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.nav-btn.active, .nav-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Główna zawartość */
+main {
+    padding: 20px;
+    position: relative;
+}
+
+.screen {
+    display: none;
+}
+
+.screen.active {
+    display: block;
+}
+
+/* Formularze */
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-primary {
+    background-color: #fd267a;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #f50057;
+}
+
+/* Ekran swipowania */
+#cards-container {
+    height: 400px;
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.profile-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s;
+}
+
+.profile-card.swiped-left {
+    transform: translateX(-150%) rotate(-20deg);
+    opacity: 0;
+}
+
+.profile-card.swiped-right {
+    transform: translateX(150%) rotate(20deg);
+    opacity: 0;
+}
+
+.profile-photo {
+    height: 300px;
+    background-size: cover;
+    background-position: center;
+}
+
+.profile-info {
+    padding: 15px;
+}
+
+.profile-info h3 {
+    font-size: 22px;
+    margin-bottom: 5px;
+}
+
+.profile-age {
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.profile-bio {
+    font-size: 14px;
+}
+
+.swipe-buttons {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.btn-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#dislike-btn {
+    background-color: #fff;
+    color: #fd5068;
+    border: 1px solid #fd5068;
+}
+
+#like-btn {
+    background-color: #fff;
+    color: #1be4a1;
+    border: 1px solid #1be4a1;
+}
+
+.card-placeholder {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    color: #777;
+}
+
+/* Ekran dopasowań */
+#matches-list {
+    margin-top: 20px;
+}
+
+.match-card {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+
+.match-photo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    margin-right: 15px;
+}
+
+.match-info h3 {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.empty-state {
+    text-align: center;
+    color: #888;
+    margin-top: 50px;
+}
+
+/* Modal dopasowania */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 10px;
+    padding: 30px;
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.modal-content h2 {
+    color: #fd267a;
+    margin-bottom: 20px;
+}
+
+#match-profile-info {
+    margin: 20px 0;
+}
+
+.match-profile-photo {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin: 0 auto 15px;
+    background-size: cover;
+    background-position: center;
+} 

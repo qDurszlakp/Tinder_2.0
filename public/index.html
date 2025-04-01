@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tinder Clone</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1><i class="fa-solid fa-fire"></i> Tinder Clone</h1>
+            <nav>
+                <button id="profile-btn" class="nav-btn"><i class="fa-solid fa-user"></i></button>
+                <button id="swipe-btn" class="nav-btn active"><i class="fa-solid fa-heart"></i></button>
+                <button id="matches-btn" class="nav-btn"><i class="fa-solid fa-comments"></i></button>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Ekran tworzenia/edycji profilu -->
+            <section id="profile-screen" class="screen">
+                <h2>Twój Profil</h2>
+                <form id="profile-form">
+                    <div class="form-group">
+                        <label for="name">Imię</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="age">Wiek</label>
+                        <input type="number" id="age" name="age" min="18" max="120" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Płeć</label>
+                        <select id="gender" name="gender" required>
+                            <option value="">Wybierz płeć</option>
+                            <option value="male">Mężczyzna</option>
+                            <option value="female">Kobieta</option>
+                            <option value="other">Inna</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="bio">O mnie</label>
+                        <textarea id="bio" name="bio" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="interests">Zainteresowania (oddzielone przecinkami)</label>
+                        <input type="text" id="interests" name="interests">
+                    </div>
+                    <div class="form-group">
+                        <label for="photoUrl">Link do zdjęcia</label>
+                        <input type="url" id="photoUrl" name="photoUrl">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Zapisz profil</button>
+                </form>
+            </section>
+
+            <!-- Ekran swipowania -->
+            <section id="swipe-screen" class="screen active">
+                <div id="cards-container">
+                    <div class="card-placeholder">
+                        <p>Ładowanie profili...</p>
+                    </div>
+                </div>
+                <div class="swipe-buttons">
+                    <button id="dislike-btn" class="btn-circle"><i class="fa-solid fa-xmark"></i></button>
+                    <button id="like-btn" class="btn-circle"><i class="fa-solid fa-heart"></i></button>
+                </div>
+            </section>
+
+            <!-- Ekran dopasowań i czatu -->
+            <section id="matches-screen" class="screen">
+                <h2>Twoje dopasowania</h2>
+                <div id="matches-list">
+                    <p class="empty-state">Nie masz jeszcze żadnych dopasowań</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Modal z powiadomieniem o dopasowaniu -->
+        <div id="match-modal" class="modal">
+            <div class="modal-content">
+                <h2>To dopasowanie!</h2>
+                <div id="match-profile-info"></div>
+                <button id="close-match-modal" class="btn btn-primary">Kontynuuj</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html> 

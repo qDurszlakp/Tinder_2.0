@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 const { connectDB } = require('./src/config/database');
 const profileRoutes = require('./src/routes/profileRoutes');
 const interactionRoutes = require('./src/routes/interactionRoutes');
@@ -8,11 +9,18 @@ const app = express();
 const port = 3000;
 
 // Middleware
+app.use(cors()); // Dodajemy CORS dla requestów z frontendu
 app.use(bodyParser.json());
+app.use(express.static('public')); // Dodajemy obsługę plików statycznych
 
 // Routing
 app.use(profileRoutes);
 app.use(interactionRoutes);
+
+// Dodajemy endpoint dla głównej strony
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/public/index.html');
+});
 
 // Funkcja uruchamiająca serwer
 async function startServer() {
