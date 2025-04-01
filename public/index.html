@@ -118,6 +118,21 @@
                     <p class="empty-state">Nie masz jeszcze żadnych dopasowań</p>
                 </div>
             </section>
+
+            <!-- Ekran Czatu -->
+            <section id="chat-screen" class="screen">
+                <h2>Czat: <span id="chat-with-name"></span></h2>
+                <div class="chat-container">
+                    <div id="chat-messages">
+                        <!-- Tutaj będą wiadomości -->
+                    </div>
+                    <form id="chat-form">
+                        <input type="text" id="chat-input" placeholder="Napisz wiadomość..." required>
+                        <button type="submit" id="chat-send-btn">Wyślij</button>
+                    </form>
+                </div>
+                <button id="back-to-matches-btn">Powrót do dopasowań</button>
+            </section>
         </main>
 
         <!-- Modal z powiadomieniem o dopasowaniu -->
@@ -125,11 +140,15 @@
             <div class="modal-content">
                 <h2>To dopasowanie!</h2>
                 <div id="match-profile-info"></div>
-                <button id="close-match-modal" class="btn btn-primary">Kontynuuj</button>
+                <div class="modal-actions">
+                    <button id="close-match-modal">Kontynuuj przeglądanie</button>
+                    <button id="start-chat-modal">Rozpocznij czat</button>
+                </div>
             </div>
         </div>
     </div>
 
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html> 

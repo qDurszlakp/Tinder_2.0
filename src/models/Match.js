@@ -62,6 +62,21 @@ class Match {
     
     return matchedProfiles;
   }
+  
+  // Sprawdza, czy istnieje dopasowanie między dwoma profilami
+  static async exists(profileId1, profileId2) {
+    const db = getDb();
+    const matchesCollection = db.collection('matches');
+    
+    const id1 = ObjectId.isValid(profileId1) ? new ObjectId(profileId1) : profileId1;
+    const id2 = ObjectId.isValid(profileId2) ? new ObjectId(profileId2) : profileId2;
+    
+    const match = await matchesCollection.findOne({
+      profiles: { $all: [id1, id2] }
+    });
+    
+    return !!match;
+  }
 }
 
 module.exports = Match; 

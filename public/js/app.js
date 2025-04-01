@@ -4,6 +4,8 @@ let currentProfileId = null;
 let currentSwipeProfiles = [];
 let currentSwipeIndex = 0;
 let authToken = null;
+let socket = null;
+let currentChatProfileId = null;
 
 // API URL - backend działa na porcie 3000
 const API_URL = 'http://localhost:3000';
@@ -13,6 +15,7 @@ const authScreen = document.getElementById('auth-screen');
 const profileScreen = document.getElementById('profile-screen');
 const swipeScreen = document.getElementById('swipe-screen');
 const matchesScreen = document.getElementById('matches-screen');
+const chatScreen = document.getElementById('chat-screen');
 
 // Elementy DOM - przyciski nawigacji
 const profileBtn = document.getElementById('profile-btn');
@@ -38,6 +41,14 @@ const dislikeBtn = document.getElementById('dislike-btn');
 const matchModal = document.getElementById('match-modal');
 const matchProfileInfo = document.getElementById('match-profile-info');
 const closeMatchModalBtn = document.getElementById('close-match-modal');
+const startChatModalBtn = document.getElementById('start-chat-modal');
+
+// Elementy DOM - czat
+const chatWithName = document.getElementById('chat-with-name');
+const chatMessages = document.getElementById('chat-messages');
+const chatForm = document.getElementById('chat-form');
+const chatInput = document.getElementById('chat-input');
+const backToMatchesBtn = document.getElementById('back-to-matches-btn');
 
 // Event Listenery
 document.addEventListener('DOMContentLoaded', init);
@@ -59,6 +70,11 @@ profileForm.addEventListener('submit', handleProfileSubmit);
 likeBtn.addEventListener('click', () => handleSwipe('like'));
 dislikeBtn.addEventListener('click', () => handleSwipe('dislike'));
 closeMatchModalBtn.addEventListener('click', hideMatchModal);
+startChatModalBtn.addEventListener('click', handleStartChatFromModal);
+
+// Czat
+chatForm.addEventListener('submit', handleSendMessage);
+backToMatchesBtn.addEventListener('click', () => switchScreen('matches'));
 
 // Inicjalizacja aplikacji
 async function init() {
@@ -79,8 +95,9 @@ async function init() {
                 currentUserId = userData.userId;
                 currentProfileId = userData.profileId;
                 
-                // Jeśli użytkownik ma profil, przejdź do ekranu swipowania
+                // Inicjalizacja Socket.IO, jeśli użytkownik ma profil
                 if (currentProfileId) {
+                    initializeSocket();
                     mainNav.style.display = 'flex';
                     await loadSwipeProfiles();
                     switchScreen('swipe');
@@ -105,13 +122,87 @@ async function init() {
     }
 }
 
+// Inicjalizacja Socket.IO
+function initializeSocket() {
+    if (socket) {
+        // Jeśli już mamy połączenie, rozłączamy je
+        socket.disconnect();
+    }
+    
+    // Nawiązywanie połączenia z serwerem Socket.IO
+    socket = io(API_URL);
+    
+    // Nasłuchiwanie zdarzeń
+    socket.on('connect', () => {
+        console.log('Połączono z serwerem Socket.IO');
+        
+        // Dołączanie do kanału użytkownika
+        socket.emit('join', {
+            profileId: currentProfileId,
+            token: authToken
+        });
+    });
+    
+    socket.on('joined', (data) => {
+        console.log('Dołączono do kanału:', data.profileId);
+    });
+    
+    socket.on('newMessage', (message) => {
+        console.log('Nowa wiadomość:', message);
+        
+        // Jeśli jesteśmy w czacie z nadawcą, dodajemy wiadomość
+        if (chatScreen.classList.contains('active') && currentChatProfileId === message.senderId) {
+            addMessageToChat(message, false);
+            markMessagesAsRead(message.senderId);
+        } else {
+            // Jeśli nie, dodajemy powiadomienie (badge) do listy dopasowań
+            updateUnreadBadge(message.senderId);
+        }
+    });
+    
+    socket.on('messageSent', (message) => {
+        console.log('Wiadomość wysłana:', message);
+        
+        // Dodajemy wiadomość do czatu
+        if (chatScreen.classList.contains('active')) {
+            addMessageToChat(message, true);
+        }
+    });
+    
+    socket.on('messagesRead', (data) => {
+        console.log('Wiadomości przeczytane:', data);
+        
+        // Aktualizujemy oznaczenie o przeczytaniu wiadomości w UI
+        const messages = document.querySelectorAll('.message.sent');
+        messages.forEach(message => {
+            message.classList.add('read');
+        });
+    });
+    
+    socket.on('error', (error) => {
+        console.error('Błąd Socket.IO:', error);
+        alert(error.message || 'Wystąpił błąd podczas komunikacji.');
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('Rozłączono z serwerem Socket.IO');
+    });
+}
+
 // Resetowanie stanu uwierzytelnienia
 function resetAuthState() {
     localStorage.removeItem('authToken');
     authToken = null;
     currentUserId = null;
     currentProfileId = null;
+    currentChatProfileId = null;
     mainNav.style.display = 'none';
+    
+    // Zamknij połączenie Socket.IO
+    if (socket) {
+        socket.disconnect();
+        socket = null;
+    }
 }
 
 // Wyświetlanie ekranu logowania
@@ -120,6 +211,7 @@ function showAuthScreen() {
     profileScreen.classList.remove('active');
     swipeScreen.classList.remove('active');
     matchesScreen.classList.remove('active');
+    chatScreen.classList.remove('active');
     mainNav.style.display = 'none';
 }
 
@@ -162,6 +254,11 @@ async function handleLogin(e) {
             localStorage.setItem('authToken', authToken);
             currentUserId = data.userId;
             currentProfileId = data.profileId;
+            
+            // Inicjalizacja Socket.IO, jeśli użytkownik ma profil
+            if (currentProfileId) {
+                initializeSocket();
+            }
             
             // Pokaż nawigację
             mainNav.style.display = 'flex';
@@ -249,6 +346,7 @@ function switchScreen(screenName) {
     profileScreen.classList.remove('active');
     swipeScreen.classList.remove('active');
     matchesScreen.classList.remove('active');
+    chatScreen.classList.remove('active');
     
     // Usuń klasę aktywny z przycisków nawigacji
     profileBtn.classList.remove('active');
@@ -275,6 +373,10 @@ function switchScreen(screenName) {
             if (currentProfileId) {
                 loadMatches();
             }
+            break;
+        case 'chat':
+            chatScreen.classList.add('active');
+            matchesBtn.classList.add('active');
             break;
     }
 }
@@ -331,6 +433,9 @@ async function handleProfileSubmit(e) {
                         profileId: currentProfileId
                     }),
                 });
+                
+                // Inicjalizacja Socket.IO
+                initializeSocket();
                 
                 // Przejdź do ekranu swipowania
                 await loadSwipeProfiles();
@@ -519,27 +624,51 @@ async function loadMatches() {
                 return;
             }
             
+            // Pobieranie konwersacji dla sprawdzenia nieprzeczytanych wiadomości
+            const conversationsResponse = await fetch(`${API_URL}/conversations/${currentProfileId}`, {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+            
+            let conversations = [];
+            if (conversationsResponse.ok) {
+                conversations = await conversationsResponse.json();
+            }
+            
+            // Mapa nieprzeczytanych wiadomości (profileId -> liczba)
+            const unreadCount = {};
+            conversations.forEach(conv => {
+                if (conv.unreadCount > 0) {
+                    unreadCount[conv.profileId] = conv.unreadCount;
+                }
+            });
+            
             let matchesHTML = '';
             matches.forEach(match => {
                 const defaultPhoto = 'https://via.placeholder.com/60x60?text=No+Photo';
+                const hasUnread = unreadCount[match.profile._id] > 0;
                 
                 matchesHTML += `
-                    <div class="match-card" data-match-id="${match.matchId}">
+                    <div class="match-card" data-profile-id="${match.profile._id}" data-name="${match.profile.name}">
                         <div class="match-photo" style="background-image: url(${match.profile.photoUrl || defaultPhoto})"></div>
                         <div class="match-info">
                             <h3>${match.profile.name || 'Brak imienia'}, ${match.profile.age || '?'}</h3>
                             <p class="match-date">Dopasowanie: ${new Date(match.profile.matchDate).toLocaleDateString()}</p>
                         </div>
+                        ${hasUnread ? `<div class="unread-badge">${unreadCount[match.profile._id]}</div>` : ''}
                     </div>
                 `;
             });
             
             matchesList.innerHTML = matchesHTML;
             
-            // Dodanie event listenerów do kart dopasowań (dla przyszłej implementacji czatu)
+            // Dodanie event listenerów do rozpoczęcia czatu
             document.querySelectorAll('.match-card').forEach(card => {
                 card.addEventListener('click', () => {
-                    alert('Czat nie jest jeszcze zaimplementowany');
+                    const profileId = card.dataset.profileId;
+                    const name = card.dataset.name;
+                    openChat(profileId, name);
                 });
             });
             
@@ -553,6 +682,141 @@ async function loadMatches() {
     }
 }
 
+// Otwieranie czatu z danym profilem
+async function openChat(profileId, name) {
+    if (!currentProfileId || !authToken) return;
+    
+    try {
+        // Zapamiętaj ID profilu, z którym czatujemy
+        currentChatProfileId = profileId;
+        
+        // Ustaw nazwę rozmówcy
+        chatWithName.textContent = name;
+        
+        // Wyczyść poprzednie wiadomości
+        chatMessages.innerHTML = '<p class="loading">Ładowanie wiadomości...</p>';
+        
+        // Pobieranie wiadomości
+        const response = await fetch(`${API_URL}/messages/${currentProfileId}/${profileId}`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        
+        if (response.ok) {
+            const messages = await response.json();
+            
+            // Wyświetl wiadomości
+            chatMessages.innerHTML = '';
+            
+            if (messages.length === 0) {
+                chatMessages.innerHTML = '<p class="empty-state">Brak wiadomości. Rozpocznij konwersację!</p>';
+            } else {
+                messages.forEach(message => {
+                    const isSent = message.senderId === currentProfileId;
+                    addMessageToChat(message, isSent, false);
+                });
+                
+                // Przewiń na dół
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Przejdź do ekranu czatu
+            switchScreen('chat');
+            
+            // Oznacz wiadomości jako przeczytane
+            markMessagesAsRead(profileId);
+            
+        } else {
+            console.error('Nie udało się pobrać wiadomości');
+            alert('Nie udało się pobrać wiadomości');
+        }
+    } catch (error) {
+        console.error('Błąd podczas otwierania czatu:', error);
+        alert('Wystąpił błąd podczas komunikacji z serwerem');
+    }
+}
+
+// Dodanie wiadomości do czatu
+function addMessageToChat(message, isSent, scrollToBottom = true) {
+    const messageElement = document.createElement('div');
+    messageElement.classList.add('message');
+    messageElement.classList.add(isSent ? 'sent' : 'received');
+    
+    const time = new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    
+    messageElement.innerHTML = `
+        <div class="message-content">${message.content}</div>
+        <div class="message-time">${time}</div>
+    `;
+    
+    chatMessages.appendChild(messageElement);
+    
+    if (scrollToBottom) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+// Oznaczenie wiadomości jako przeczytane
+function markMessagesAsRead(senderId) {
+    if (!socket || !currentProfileId) return;
+    
+    socket.emit('markAsRead', {
+        profileId: currentProfileId,
+        otherProfileId: senderId
+    });
+    
+    // Zaktualizuj UI - usuń badge z nieprzeczytanymi wiadomościami
+    const matchCard = document.querySelector(`.match-card[data-profile-id="${senderId}"]`);
+    if (matchCard) {
+        const badge = matchCard.querySelector('.unread-badge');
+        if (badge) {
+            badge.remove();
+        }
+    }
+}
+
+// Aktualizacja badge'a z nieprzeczytanymi wiadomościami
+function updateUnreadBadge(senderId) {
+    const matchCard = document.querySelector(`.match-card[data-profile-id="${senderId}"]`);
+    if (!matchCard) return;
+    
+    let badge = matchCard.querySelector('.unread-badge');
+    
+    if (badge) {
+        // Zwiększ licznik
+        const count = parseInt(badge.textContent) + 1;
+        badge.textContent = count;
+    } else {
+        // Utwórz nowy badge
+        badge = document.createElement('div');
+        badge.classList.add('unread-badge');
+        badge.textContent = '1';
+        matchCard.appendChild(badge);
+    }
+}
+
+// Wysyłanie wiadomości
+async function handleSendMessage(e) {
+    e.preventDefault();
+    
+    const content = chatInput.value.trim();
+    
+    if (!content || !currentProfileId || !currentChatProfileId || !socket) {
+        return;
+    }
+    
+    // Wyślij wiadomość przez Socket.IO
+    socket.emit('sendMessage', {
+        senderId: currentProfileId,
+        receiverId: currentChatProfileId,
+        content
+    });
+    
+    // Wyczyść pole tekstowe
+    chatInput.value = '';
+}
+
 // Wyświetlanie modala z informacją o dopasowaniu
 function showMatchModal(matchedProfile) {
     const defaultPhoto = 'https://via.placeholder.com/100x100?text=No+Photo';
@@ -563,10 +827,28 @@ function showMatchModal(matchedProfile) {
         <p>Też Cię polubił(a)! Możecie teraz zacząć rozmowę.</p>
     `;
     
+    // Zapamiętaj ID dopasowanego profilu dla przycisku rozpoczęcia czatu
+    startChatModalBtn.dataset.profileId = matchedProfile._id;
+    startChatModalBtn.dataset.name = matchedProfile.name;
+    
     matchModal.classList.add('active');
 }
 
 // Ukrywanie modala z informacją o dopasowaniu
 function hideMatchModal() {
     matchModal.classList.remove('active');
+}
+
+// Rozpoczęcie czatu z modala dopasowania
+function handleStartChatFromModal() {
+    const profileId = startChatModalBtn.dataset.profileId;
+    const name = startChatModalBtn.dataset.name;
+    
+    // Najpierw ukryj modal
+    hideMatchModal();
+    
+    // Następnie otwórz czat
+    if (profileId) {
+        openChat(profileId, name);
+    }
 } 
