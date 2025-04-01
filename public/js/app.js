@@ -1,20 +1,33 @@
 // Globalne zmienne
+let currentUserId = null;
 let currentProfileId = null;
 let currentSwipeProfiles = [];
 let currentSwipeIndex = 0;
+let authToken = null;
 
 // API URL - backend działa na porcie 3000
 const API_URL = 'http://localhost:3000';
 
-// Elementy DOM
+// Elementy DOM - ekrany
+const authScreen = document.getElementById('auth-screen');
 const profileScreen = document.getElementById('profile-screen');
 const swipeScreen = document.getElementById('swipe-screen');
 const matchesScreen = document.getElementById('matches-screen');
 
+// Elementy DOM - przyciski nawigacji
 const profileBtn = document.getElementById('profile-btn');
 const swipeBtn = document.getElementById('swipe-btn');
 const matchesBtn = document.getElementById('matches-btn');
+const logoutBtn = document.getElementById('logout-btn');
+const mainNav = document.getElementById('main-nav');
 
+// Elementy DOM - logowanie i rejestracja
+const loginTab = document.getElementById('login-tab');
+const registerTab = document.getElementById('register-tab');
+const loginForm = document.getElementById('login-form');
+const registerForm = document.getElementById('register-form');
+
+// Elementy DOM - pozostałe
 const profileForm = document.getElementById('profile-form');
 const cardsContainer = document.getElementById('cards-container');
 const matchesList = document.getElementById('matches-list');
@@ -29,10 +42,19 @@ const closeMatchModalBtn = document.getElementById('close-match-modal');
 // Event Listenery
 document.addEventListener('DOMContentLoaded', init);
 
+// Nawigacja
 profileBtn.addEventListener('click', () => switchScreen('profile'));
 swipeBtn.addEventListener('click', () => switchScreen('swipe'));
 matchesBtn.addEventListener('click', () => switchScreen('matches'));
+logoutBtn.addEventListener('click', handleLogout);
 
+// Logowanie/Rejestracja
+loginTab.addEventListener('click', () => switchAuthTab('login'));
+registerTab.addEventListener('click', () => switchAuthTab('register'));
+loginForm.addEventListener('submit', handleLogin);
+registerForm.addEventListener('submit', handleRegister);
+
+// Pozostałe
 profileForm.addEventListener('submit', handleProfileSubmit);
 likeBtn.addEventListener('click', () => handleSwipe('like'));
 dislikeBtn.addEventListener('click', () => handleSwipe('dislike'));
@@ -40,25 +62,190 @@ closeMatchModalBtn.addEventListener('click', hideMatchModal);
 
 // Inicjalizacja aplikacji
 async function init() {
-    // Sprawdź, czy użytkownik ma już profil (localStorage)
-    const storedProfileId = localStorage.getItem('profileId');
+    // Sprawdź, czy użytkownik jest zalogowany (token w localStorage)
+    authToken = localStorage.getItem('authToken');
     
-    if (storedProfileId) {
-        // Jeśli ma profil, załaduj dane
-        currentProfileId = storedProfileId;
-        await loadProfileData();
-        await loadSwipeProfiles();
-        await loadMatches();
-        switchScreen('swipe');
+    if (authToken) {
+        // Próba weryfikacji tokenu
+        try {
+            const response = await fetch(`${API_URL}/verify-token`, {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+            
+            if (response.ok) {
+                const userData = await response.json();
+                currentUserId = userData.userId;
+                currentProfileId = userData.profileId;
+                
+                // Jeśli użytkownik ma profil, przejdź do ekranu swipowania
+                if (currentProfileId) {
+                    mainNav.style.display = 'flex';
+                    await loadSwipeProfiles();
+                    switchScreen('swipe');
+                } else {
+                    // Jeśli nie ma profilu, przejdź do ekranu tworzenia profilu
+                    mainNav.style.display = 'flex';
+                    switchScreen('profile');
+                }
+            } else {
+                // Token nieprawidłowy - wyloguj użytkownika
+                resetAuthState();
+                showAuthScreen();
+            }
+        } catch (error) {
+            console.error('Błąd weryfikacji tokenu:', error);
+            resetAuthState();
+            showAuthScreen();
+        }
     } else {
-        // Jeśli nie ma, pokaż ekran tworzenia profilu
-        switchScreen('profile');
+        // Brak tokenu - pokaż ekran logowania
+        showAuthScreen();
     }
+}
+
+// Resetowanie stanu uwierzytelnienia
+function resetAuthState() {
+    localStorage.removeItem('authToken');
+    authToken = null;
+    currentUserId = null;
+    currentProfileId = null;
+    mainNav.style.display = 'none';
+}
+
+// Wyświetlanie ekranu logowania
+function showAuthScreen() {
+    authScreen.classList.add('active');
+    profileScreen.classList.remove('active');
+    swipeScreen.classList.remove('active');
+    matchesScreen.classList.remove('active');
+    mainNav.style.display = 'none';
+}
+
+// Przełączanie między zakładkami logowania i rejestracji
+function switchAuthTab(tab) {
+    if (tab === 'login') {
+        loginTab.classList.add('active');
+        registerTab.classList.remove('active');
+        loginForm.classList.add('active');
+        registerForm.classList.remove('active');
+    } else {
+        loginTab.classList.remove('active');
+        registerTab.classList.add('active');
+        loginForm.classList.remove('active');
+        registerForm.classList.add('active');
+    }
+}
+
+// Obsługa logowania
+async function handleLogin(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    
+    try {
+        const response = await fetch(`${API_URL}/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Zapisz token uwierzytelniający
+            authToken = data.token;
+            localStorage.setItem('authToken', authToken);
+            currentUserId = data.userId;
+            currentProfileId = data.profileId;
+            
+            // Pokaż nawigację
+            mainNav.style.display = 'flex';
+            
+            // Przejdź do odpowiedniego ekranu
+            if (currentProfileId) {
+                await loadSwipeProfiles();
+                switchScreen('swipe');
+            } else {
+                switchScreen('profile');
+            }
+        } else {
+            alert(data.message || 'Błąd logowania');
+        }
+    } catch (error) {
+        console.error('Błąd podczas logowania:', error);
+        alert('Wystąpił błąd podczas komunikacji z serwerem.');
+    }
+}
+
+// Obsługa rejestracji
+async function handleRegister(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('register-email').value;
+    const password = document.getElementById('register-password').value;
+    const confirmPassword = document.getElementById('register-confirm-password').value;
+    
+    // Walidacja hasła
+    if (password !== confirmPassword) {
+        alert('Hasła nie są identyczne');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Zapisz token uwierzytelniający
+            authToken = data.token;
+            localStorage.setItem('authToken', authToken);
+            currentUserId = data.userId;
+            
+            // Pokaż nawigację i przejdź do ekranu tworzenia profilu
+            mainNav.style.display = 'flex';
+            switchScreen('profile');
+            
+            alert('Konto zostało utworzone pomyślnie. Teraz utwórz swój profil.');
+        } else {
+            alert(data.message || 'Błąd rejestracji');
+        }
+    } catch (error) {
+        console.error('Błąd podczas rejestracji:', error);
+        alert('Wystąpił błąd podczas komunikacji z serwerem.');
+    }
+}
+
+// Obsługa wylogowania
+function handleLogout() {
+    resetAuthState();
+    showAuthScreen();
+    
+    // Resetuj formularze
+    loginForm.reset();
+    registerForm.reset();
+    profileForm.reset();
+    
+    // Wyczyść dane
+    currentSwipeProfiles = [];
+    currentSwipeIndex = 0;
 }
 
 // Zmiana aktywnego ekranu
 function switchScreen(screenName) {
     // Ukryj wszystkie ekrany
+    authScreen.classList.remove('active');
     profileScreen.classList.remove('active');
     swipeScreen.classList.remove('active');
     matchesScreen.classList.remove('active');
@@ -73,6 +260,7 @@ function switchScreen(screenName) {
         case 'profile':
             profileScreen.classList.add('active');
             profileBtn.classList.add('active');
+            loadProfileData();
             break;
         case 'swipe':
             swipeScreen.classList.add('active');
@@ -95,6 +283,11 @@ function switchScreen(screenName) {
 async function handleProfileSubmit(e) {
     e.preventDefault();
     
+    if (!authToken || !currentUserId) {
+        alert('Musisz być zalogowany, aby utworzyć profil');
+        return;
+    }
+    
     const formData = new FormData(profileForm);
     const profileData = {
         name: formData.get('name'),
@@ -115,6 +308,7 @@ async function handleProfileSubmit(e) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
                 },
                 body: JSON.stringify(profileData),
             });
@@ -124,7 +318,19 @@ async function handleProfileSubmit(e) {
             if (response.ok) {
                 // Zapisz ID profilu
                 currentProfileId = data.profileId;
-                localStorage.setItem('profileId', currentProfileId);
+                
+                // Powiąż profil z kontem użytkownika
+                await fetch(`${API_URL}/link-profile`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        userId: currentUserId,
+                        profileId: currentProfileId
+                    }),
+                });
                 
                 // Przejdź do ekranu swipowania
                 await loadSwipeProfiles();
@@ -141,10 +347,14 @@ async function handleProfileSubmit(e) {
 
 // Ładowanie danych profilu
 async function loadProfileData() {
-    if (!currentProfileId) return;
+    if (!currentProfileId || !authToken) return;
     
     try {
-        const response = await fetch(`${API_URL}/profile/${currentProfileId}`);
+        const response = await fetch(`${API_URL}/profile/${currentProfileId}`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
         const profileData = await response.json();
         
         if (response.ok) {
@@ -167,12 +377,16 @@ async function loadProfileData() {
 
 // Ładowanie profili do przeglądania
 async function loadSwipeProfiles() {
-    if (!currentProfileId) return;
+    if (!currentProfileId || !authToken) return;
     
     try {
         cardsContainer.innerHTML = '<div class="card-placeholder"><p>Ładowanie profili...</p></div>';
         
-        const response = await fetch(`${API_URL}/profiles/${currentProfileId}`);
+        const response = await fetch(`${API_URL}/profiles/${currentProfileId}`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
         const profiles = await response.json();
         
         if (response.ok) {
@@ -225,7 +439,7 @@ function renderCurrentProfile() {
 
 // Obsługa swipe'ów (like/dislike)
 async function handleSwipe(action) {
-    if (!currentProfileId || currentSwipeProfiles.length === 0 || currentSwipeIndex >= currentSwipeProfiles.length) {
+    if (!currentProfileId || !authToken || currentSwipeProfiles.length === 0 || currentSwipeIndex >= currentSwipeProfiles.length) {
         return;
     }
     
@@ -256,6 +470,7 @@ async function handleSwipe(action) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
             },
             body: JSON.stringify(data),
         });
@@ -286,12 +501,16 @@ async function handleSwipe(action) {
 
 // Ładowanie dopasowań
 async function loadMatches() {
-    if (!currentProfileId) return;
+    if (!currentProfileId || !authToken) return;
     
     try {
         matchesList.innerHTML = '<p class="loading">Ładowanie dopasowań...</p>';
         
-        const response = await fetch(`${API_URL}/matches/${currentProfileId}`);
+        const response = await fetch(`${API_URL}/matches/${currentProfileId}`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
         const matches = await response.json();
         
         if (response.ok) {

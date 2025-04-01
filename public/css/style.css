@@ -111,6 +111,50 @@ input, select, textarea {
     background-color: #f50057;
 }
 
+/* Ekran logowania i rejestracji */
+.auth-container {
+    max-width: 400px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 20px;
+}
+
+.auth-container h2 {
+    margin-bottom: 30px;
+    color: #fd267a;
+}
+
+.auth-tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.auth-tab {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    color: #777;
+}
+
+.auth-tab.active {
+    color: #fd267a;
+    border-bottom: 2px solid #fd267a;
+    font-weight: bold;
+}
+
+.auth-form {
+    display: none;
+    text-align: left;
+}
+
+.auth-form.active {
+    display: block;
+}
+
 /* Ekran swipowania */
 #cards-container {
     height: 400px;

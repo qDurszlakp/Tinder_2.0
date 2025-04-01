@@ -11,14 +11,56 @@
     <div class="app-container">
         <header>
             <h1><i class="fa-solid fa-fire"></i> Tinder Clone</h1>
-            <nav>
+            <nav id="main-nav">
                 <button id="profile-btn" class="nav-btn"><i class="fa-solid fa-user"></i></button>
                 <button id="swipe-btn" class="nav-btn active"><i class="fa-solid fa-heart"></i></button>
                 <button id="matches-btn" class="nav-btn"><i class="fa-solid fa-comments"></i></button>
+                <button id="logout-btn" class="nav-btn"><i class="fa-solid fa-sign-out-alt"></i></button>
             </nav>
         </header>
 
         <main>
+            <!-- Ekran logowania i rejestracji -->
+            <section id="auth-screen" class="screen active">
+                <div class="auth-container">
+                    <h2>Witaj w Tinder Clone</h2>
+                    <div class="auth-tabs">
+                        <button id="login-tab" class="auth-tab active">Logowanie</button>
+                        <button id="register-tab" class="auth-tab">Rejestracja</button>
+                    </div>
+                    
+                    <!-- Formularz logowania -->
+                    <form id="login-form" class="auth-form active">
+                        <div class="form-group">
+                            <label for="login-email">Email</label>
+                            <input type="email" id="login-email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">Hasło</label>
+                            <input type="password" id="login-password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Zaloguj się</button>
+                    </form>
+                    
+                    <!-- Formularz rejestracji -->
+                    <form id="register-form" class="auth-form">
+                        <div class="form-group">
+                            <label for="register-email">Email</label>
+                            <input type="email" id="register-email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-password">Hasło</label>
+                            <input type="password" id="register-password" name="password" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label for="register-confirm-password">Potwierdź hasło</label>
+                            <input type="password" id="register-confirm-password" name="confirmPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Zarejestruj się</button>
+                    </form>
+                </div>
+            </section>
+
             <!-- Ekran tworzenia/edycji profilu -->
             <section id="profile-screen" class="screen">
                 <h2>Twój Profil</h2>
@@ -57,7 +99,7 @@
             </section>
 
             <!-- Ekran swipowania -->
-            <section id="swipe-screen" class="screen active">
+            <section id="swipe-screen" class="screen">
                 <div id="cards-container">
                     <div class="card-placeholder">
                         <p>Ładowanie profili...</p>
