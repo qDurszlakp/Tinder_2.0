@@ -12,13 +12,10 @@ async function connectDB() {
     const options = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      ssl: true,
-      tls: true,
-      tlsInsecure: true,
-      tlsAllowInvalidCertificates: false,
-      retryWrites: true
+      tlsAllowInvalidCertificates: true
     };
 
+    console.log('Próba połączenia z MongoDB:', mongoUrl);
     const client = new MongoClient(mongoUrl, options);
     await client.connect();
     db = client.db(dbName);
